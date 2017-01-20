@@ -34,7 +34,9 @@ typedef NS_ENUM(NSUInteger, OWSConversationSettingsTableViewControllerSection) {
 typedef NS_ENUM(NSUInteger, OWSConversationSettingsTableViewControllerContactCellIndex) {
     OWSConversationSettingsTableViewControllerCellIndexShowFingerprint,
     OWSConversationSettingsTableViewControllerCellIndexToggleDisappearingMessages,
-    OWSConversationSettingsTableViewControllerCellIndexSetDisappearingMessagesDuration
+    OWSConversationSettingsTableViewControllerCellIndexSetDisappearingMessagesDuration,
+    OWSConversationSettingsTableViewControllerCellIndexSendMessageBarrage,
+    OWSConversationSettingsTableViewControllerCellIndexCellCount
 };
 
 typedef NS_ENUM(NSUInteger, OWSConversationSettingsTableViewControllerGroupCellIndex) {
@@ -52,6 +54,7 @@ static NSString *const OWSConversationSettingsTableViewControllerSegueShowGroupM
 
 @property (strong, nonatomic) IBOutlet UITableViewCell *verifyPrivacyCell;
 @property (strong, nonatomic) IBOutlet UITableViewCell *toggleDisappearingMessagesCell;
+@property (strong, nonatomic) IBOutlet UITableViewCell *sendMessagBarrageCell;
 @property (strong, nonatomic) IBOutlet UILabel *toggleDisappearingMessagesTitleLabel;
 @property (strong, nonatomic) IBOutlet UILabel *toggleDisappearingMessagesDescriptionLabel;
 @property (strong, nonatomic) IBOutlet UISwitch *disappearingMessagesSwitch;
@@ -313,7 +316,9 @@ static NSString *const OWSConversationSettingsTableViewControllerSegueShowGroupM
 {
     DDLogDebug(@"%@ tapped indexPath:%@", self.tag, indexPath);
 
-    if (indexPath.section == OWSConversationSettingsTableViewControllerSectionGroup
+    if (self.sendMessagBarrageCell == [self tableView:tableView cellForRowAtIndexPath:indexPath]) {
+        [self didSelectSendMessageBarrage];
+    } else if (indexPath.section == OWSConversationSettingsTableViewControllerSectionGroup
         && indexPath.row == OWSConversationSettingsTableViewControllerCellIndexLeaveGroup) {
 
         [self didTapLeaveGroup];
@@ -334,6 +339,32 @@ static NSString *const OWSConversationSettingsTableViewControllerSegueShowGroupM
 }
 
 #pragma mark - Actions
+
+- (void)didSelectSendMessageBarrage
+{
+    // Approximate (fuzzed with random)
+    NSUInteger messagesPerSecond = 1;
+    NSUInteger numberOfSeconds = 60;
+    NSUInteger barrageSize = messagesPerSecond * numberOfSeconds;
+
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        for (NSUInteger i = 0; i < barrageSize; i++) {
+            UInt32 msDelay = arc4random_uniform(2000 / messagesPerSecond);
+            [NSThread sleepForTimeInterval:msDelay / 1000.0];
+
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                uint64_t now = [NSDate ows_millisecondTimeStamp];
+                NSString *body = [NSString stringWithFormat:@"Message Body: %lu, sent at %llu", (unsigned long)i, now];
+                TSOutgoingMessage *message = [[TSOutgoingMessage alloc] initWithTimestamp:now inThread:self.thread messageBody:body];
+                [self.messageSender sendMessage:message success:^{
+                    DDLogDebug(@"%s with i: %lu succeeded", __PRETTY_FUNCTION__, (unsigned long)i);
+                } failure:^(NSError * _Nonnull error) {
+                    DDLogError(@"%s with i: %lu failed with error: %@", __PRETTY_FUNCTION__, (unsigned long)i, error);
+                }];
+            });
+        }
+    });
+}
 
 - (void)didTapLeaveGroup
 {
