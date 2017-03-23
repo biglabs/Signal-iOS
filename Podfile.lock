@@ -117,14 +117,14 @@ DEPENDENCIES:
   - OpenSSL
   - PureLayout
   - SCWaveformView (~> 1.0)
-  - SignalServiceKit (from `../SignalServiceKit`)
+  - SignalServiceKit (from `https://github.com/WhisperSystems/SignalServiceKit.git`)
   - SocketRocket (from `https://github.com/facebook/SocketRocket.git`)
 
 EXTERNAL SOURCES:
   AxolotlKit:
     :git: https://github.com/WhisperSystems/SignalProtocolKit.git
   SignalServiceKit:
-    :path: ../SignalServiceKit
+    :git: https://github.com/WhisperSystems/SignalServiceKit.git
   SocketRocket:
     :git: https://github.com/facebook/SocketRocket.git
 
@@ -132,6 +132,9 @@ CHECKOUT OPTIONS:
   AxolotlKit:
     :commit: a3c843cc8a423c5924c663490978f81dba34d04e
     :git: https://github.com/WhisperSystems/SignalProtocolKit.git
+  SignalServiceKit:
+    :commit: d31cfe6fd687d01a485e08373e0a5c511cf79539
+    :git: https://github.com/WhisperSystems/SignalServiceKit.git
   SocketRocket:
     :commit: 877ac7438be3ad0b45ef5ca3969574e4b97112bf
     :git: https://github.com/facebook/SocketRocket.git
@@ -160,6 +163,6 @@ SPEC CHECKSUMS:
   UnionFind: c33be5adb12983981d6e827ea94fc7f9e370f52d
   YapDatabase: b1e43555a34a5298e23a045be96817a5ef0da58f
 
-PODFILE CHECKSUM: 57d0830f1d754bd2f3ba9991a8803bdb251f0f84
+PODFILE CHECKSUM: e1b30ecf8ba192005de35b7e0928ed01ae8a91ba
 
 COCOAPODS: 1.2.0
