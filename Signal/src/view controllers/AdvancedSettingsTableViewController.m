@@ -10,7 +10,8 @@
 #import "RPAccountManager.h"
 #import "Signal-Swift.h"
 #import "TSAccountManager.h"
-#import "Pastelog.h"
+#import "UIViewController+OWS.h"
+#import <PastelogKit/Pastelog.h>
 #import <PromiseKit/AnyPromise.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -51,6 +52,8 @@ typedef NS_ENUM(NSInteger, AdvancedSettingsTableViewControllerSection) {
 
     self.title = NSLocalizedString(@"SETTINGS_ADVANCED_TITLE", @"");
     
+    [self useOWSBackButton];
+    
     // Enable Log
     self.enableLogCell                        = [[UITableViewCell alloc] init];
     self.enableLogCell.textLabel.text         = NSLocalizedString(@"SETTINGS_ADVANCED_DEBUGLOG", @"");
@@ -59,7 +62,7 @@ typedef NS_ENUM(NSInteger, AdvancedSettingsTableViewControllerSection) {
     [self.enableLogSwitch setOn:[PropertyListPreferences loggingIsEnabled]];
     [self.enableLogSwitch addTarget:self
                              action:@selector(didToggleEnableLogSwitch:)
-                   forControlEvents:UIControlEventValueChanged];
+                   forControlEvents:UIControlEventTouchUpInside];
     self.enableLogCell.accessoryView = self.enableLogSwitch;
 
     // Send Log

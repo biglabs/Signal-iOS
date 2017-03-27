@@ -10,6 +10,8 @@
 
 #import "AFHTTPSessionManager+SignalMethods.h"
 #import <SignalServiceKit/OWSHTTPSecurityPolicy.h>
+#import "RestAPI.h"
+
 
 @interface RPServerRequestsManager ()
 
@@ -34,7 +36,7 @@
     if (self) {
         NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration defaultSessionConfiguration];
         HostNameEndPoint *endpoint               = Environment.getCurrent.masterServerSecureEndPoint.hostNameEndPoint;
-        NSURL *endPointURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://%@:%d", endpoint.hostname, 443]];
+        NSURL *endPointURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@://%@:%@", MASTER_SERVER_PROTOCOL, endpoint.hostname, MASTER_SERVER_PORT]];
         self.operationManager =
             [[AFHTTPSessionManager alloc] initWithBaseURL:endPointURL sessionConfiguration:sessionConfig];
         self.operationManager.securityPolicy = [OWSHTTPSecurityPolicy sharedPolicy];

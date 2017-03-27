@@ -253,6 +253,18 @@ protocol CallServiceObserver: class {
         return  "CallServiceActiveCallNotification"
     }
 
+    class func presentCallInterstitialNotificationName() -> String {
+        return  "CallServicePresentCallInterstitialNotification"
+    }
+
+    class func dismissCallInterstitialNotificationName() -> String {
+        return  "CallServiceDismissCallInterstitialNotification"
+    }
+
+    class func callWasCancelledByInterstitialNotificationName() -> String {
+        return  "CallServiceCallWasCancelledByInterstitialNotification"
+    }
+
     // MARK: - Service Actions
 
     /**
@@ -384,7 +396,7 @@ protocol CallServiceObserver: class {
 
         // Insert missed call record
         if let callRecord = call.callRecord {
-            if callRecord.callType == RPRecentCallTypeIncoming {
+            if (callRecord.callType == RPRecentCallTypeIncoming) {
                 callRecord.updateCallType(RPRecentCallTypeMissed)
             }
         } else {

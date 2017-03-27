@@ -6,6 +6,7 @@
 #import "OWSDeviceTableViewCell.h"
 #import "OWSLinkDeviceViewController.h"
 #import "UIViewController+CameraPermissions.h"
+#import "UIViewController+OWS.h"
 #import <SignalServiceKit/OWSDevice.h>
 #import <SignalServiceKit/OWSDevicesService.h>
 #import <SignalServiceKit/TSDatabaseView.h>
@@ -39,6 +40,8 @@ int const OWSLinkedDevicesTableViewControllerSectionAddDevice = 1;
 {
     [super viewDidLoad];
     self.title = NSLocalizedString(@"LINKED_DEVICES_TITLE", @"Menu item and navbar title for the device manager");
+
+    [self useOWSBackButton];
 
     self.isExpectingMoreDevices = NO;
     self.tableView.rowHeight = UITableViewAutomaticDimension;

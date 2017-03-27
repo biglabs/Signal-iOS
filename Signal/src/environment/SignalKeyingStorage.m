@@ -10,7 +10,7 @@
 #define SignalKeyingCollection @"SignalKeyingCollection"
 
 #define SIGNALING_MAC_KEY_LENGTH 20
-#define SIGNALING_CIPHER_KEY_LENGTH 16
+#define SIGNALING_CIPHER_KEY_LENGTH 32
 #define SAVED_PASSWORD_LENGTH 18
 #define SIGNALING_EXTRA_KEY_LENGTH 4
 

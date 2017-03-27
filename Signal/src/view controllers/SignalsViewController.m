@@ -137,6 +137,14 @@ NSString *const SignalsViewControllerSegueShowIncomingCall = @"ShowIncomingCallS
                                              selector:@selector(handleActiveCallNotification:)
                                                  name:[CallService callServiceActiveCallNotificationName]
                                                object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handlePresentCallInterstitialNotification:)
+                                                 name:[CallService presentCallInterstitialNotificationName]
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleDismissCallInterstitialNotification:)
+                                                 name:[CallService dismissCallInterstitialNotificationName]
+                                               object:nil];
     
     [self updateBarButtonItems];
 }
@@ -195,6 +203,50 @@ NSString *const SignalsViewControllerSegueShowIncomingCall = @"ShowIncomingCallS
     }
 }
 
+- (void)handlePresentCallInterstitialNotification:(NSNotification *)notification
+{
+    AssertIsOnMainThread();
+    
+    NSString *callToken = notification.object;
+    OWSAssert(callToken != nil);
+    
+    OWSCallInterstitialViewController *viewController = [[OWSCallInterstitialViewController alloc] initWithCallToken:callToken];
+    
+    void(^presentInterstitial)() = ^{
+        viewController.modalPresentationStyle = UIModalPresentationOverFullScreen;
+        [self presentViewController:viewController
+                           animated:NO
+                         completion:nil];
+    };
+    
+    // Dismiss any other modals so we can present call modal.
+    if (self.presentedViewController) {
+        [self dismissViewControllerAnimated:YES completion:presentInterstitial];
+    } else {
+        presentInterstitial();
+    }
+}
+
+- (void)handleDismissCallInterstitialNotification:(NSNotification *)notification
+{
+    AssertIsOnMainThread();
+    
+    NSString *callToken = notification.object;
+    OWSAssert(callToken != nil);
+    
+    if (!self.presentedViewController ||
+        ![self.presentedViewController isKindOfClass:[OWSCallInterstitialViewController class]]) {
+        return;
+    }
+
+    
+    OWSCallInterstitialViewController *viewController = (OWSCallInterstitialViewController *)self.presentedViewController;
+    if (![viewController.callToken isEqualToString:callToken]) {
+        return;
+    }
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
 - (void)handleActiveCallNotification:(NSNotification *)notification
 {
     AssertIsOnMainThread();
@@ -210,7 +262,8 @@ NSString *const SignalsViewControllerSegueShowIncomingCall = @"ShowIncomingCallS
     
     // Dismiss any other modals so we can present call modal.
     if (self.presentedViewController) {
-        [self dismissViewControllerAnimated:YES
+        BOOL shouldAnimate = ![self.presentedViewController isKindOfClass:[OWSCallInterstitialViewController class]];
+        [self dismissViewControllerAnimated:shouldAnimate
                                  completion:^{
             [self performSegueWithIdentifier:SignalsViewControllerSegueShowIncomingCall sender:call];
         }];

@@ -6,6 +6,7 @@
 #import "Environment.h"
 #import "NotificationSettingsOptionsViewController.h"
 #import "PropertyListPreferences.h"
+#import "UIViewController+OWS.h"
 
 #define kNotificationOptionSection 0
 
@@ -24,6 +25,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     [self setTitle:NSLocalizedString(@"SETTINGS_NOTIFICATIONS", nil)];
+
+    [self useOWSBackButton];
 
     self.notificationsSections = @[
         NSLocalizedString(@"NOTIFICATIONS_SECTION_BACKGROUND", nil),

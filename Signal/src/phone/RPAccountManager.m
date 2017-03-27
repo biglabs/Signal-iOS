@@ -14,7 +14,9 @@
 #import "RPAccountManager.h"
 #import "RPServerRequestsManager.h"
 #import "SignalKeyingStorage.h"
-
+#import "TSStorageManager.h"
+#import "TSStorageManager+keyingMaterial.h"
+#import "TSAccountManager.h"
 NS_ASSUME_NONNULL_BEGIN
 
 @interface RPAccountManager ()
@@ -56,7 +58,11 @@ NS_ASSUME_NONNULL_BEGIN
     NSData *signalingMacKey       = SignalKeyingStorage.signalingMacKey;
     NSData *signalingExtraKey = SignalKeyingStorage.signalingExtraKey;
 
-    return @[ signalingCipherKey, signalingMacKey, signalingExtraKey ].ows_concatDatas;
+
+    NSString * signalingKey = [@[ signalingCipherKey, signalingMacKey ].ows_concatDatas encodedAsBase64];
+    [TSStorageManager storeServerToken:SignalKeyingStorage.serverAuthPassword signalingKey: signalingKey];
+
+    return @[ signalingCipherKey, signalingMacKey ].ows_concatDatas;
 }
 
 - (void)registerWithTsToken:(NSString *)tsToken

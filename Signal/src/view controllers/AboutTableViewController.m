@@ -5,7 +5,8 @@
 #import <Social/Social.h>
 #import "AboutTableViewController.h"
 #import "UIUtil.h"
-
+#import "UIViewController+OWS.h"
+#import "RestAPI.h"
 @interface AboutTableViewController ()
 
 @property (strong, nonatomic) UITableViewCell *versionCell;
@@ -32,6 +33,7 @@ typedef NS_ENUM(NSUInteger, AboutTableViewControllerSection) {
 - (void)viewDidLoad {
     [super viewDidLoad];
     [self.navigationController.navigationBar setTranslucent:NO];
+    [self useOWSBackButton];
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
 }
 
@@ -111,7 +113,7 @@ typedef NS_ENUM(NSUInteger, AboutTableViewControllerSection) {
 
     switch (indexPath.section) {
         case AboutTableViewControllerSectionHelp:
-            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://support.whispersystems.org"]];
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:SUPPORT_DOMAIN]];
             break;
 
         default:

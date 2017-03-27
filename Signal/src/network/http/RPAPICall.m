@@ -43,7 +43,7 @@ NSString *const RPAPICallSignalingKeyKey = @"signalingKey";
     RPAPICall *apiCall = [self defaultAPICall];
 
     apiCall.method     = HTTP_PUT;
-    apiCall.endPoint   = [NSString stringWithFormat:@"/api/v1/accounts/token/%@", tsToken];
+    apiCall.endPoint   = [NSString stringWithFormat:@"/v1/accounts/token/%@", tsToken];
     apiCall.parameters[RPAPICallSignalingKeyKey] = [signalingKey encodedAsBase64];
     return apiCall;
 }
@@ -55,7 +55,7 @@ NSString *const RPAPICallSignalingKeyKey = @"signalingKey";
 
     apiCall.parameters[RPAPICallPushTokenKey] = pushToken;
     apiCall.parameters[RPAPICallVoipTokenKey] = voipToken;
-    apiCall.endPoint = @"/api/v1/accounts/apn";
+    apiCall.endPoint = @"/v1/accounts/apn";
 
     return apiCall;
 }

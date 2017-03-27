@@ -180,29 +180,29 @@ typedef enum : NSUInteger {
     NSUInteger _unreadCount;
 }
 
-@property (nonatomic) TSThread *thread;
-@property (nonatomic) TSMessageAdapter *lastDeliveredMessage;
-@property (nonatomic) YapDatabaseConnection *editingDatabaseConnection;
-@property (nonatomic) YapDatabaseConnection *uiDatabaseConnection;
-@property (nonatomic) YapDatabaseViewMappings *messageMappings;
+@property TSThread *thread;
+@property TSMessageAdapter *lastDeliveredMessage;
+@property (nonatomic, strong) YapDatabaseConnection *editingDatabaseConnection;
+@property (nonatomic, strong) YapDatabaseConnection *uiDatabaseConnection;
+@property (nonatomic, strong) YapDatabaseViewMappings *messageMappings;
 
-@property (nonatomic) JSQMessagesBubbleImage *outgoingBubbleImageData;
-@property (nonatomic) JSQMessagesBubbleImage *incomingBubbleImageData;
-@property (nonatomic) JSQMessagesBubbleImage *currentlyOutgoingBubbleImageData;
-@property (nonatomic) JSQMessagesBubbleImage *outgoingMessageFailedImageData;
+@property (nonatomic, retain) JSQMessagesBubbleImage *outgoingBubbleImageData;
+@property (nonatomic, retain) JSQMessagesBubbleImage *incomingBubbleImageData;
+@property (nonatomic, retain) JSQMessagesBubbleImage *currentlyOutgoingBubbleImageData;
+@property (nonatomic, retain) JSQMessagesBubbleImage *outgoingMessageFailedImageData;
 
-@property (nonatomic) NSTimer *audioPlayerPoller;
-@property (nonatomic) TSVideoAttachmentAdapter *currentMediaAdapter;
+@property (nonatomic, strong) NSTimer *audioPlayerPoller;
+@property (nonatomic, strong) TSVideoAttachmentAdapter *currentMediaAdapter;
 
-@property (nonatomic) NSTimer *readTimer;
-@property (nonatomic) UIView *navigationBarTitleView;
-@property (nonatomic) UILabel *navigationBarTitleLabel;
-@property (nonatomic) UILabel *navigationBarSubtitleLabel;
-@property (nonatomic) UIButton *attachButton;
+@property (nonatomic, retain) NSTimer *readTimer;
+@property (nonatomic, strong) UIView *navigationBarTitleView;
+@property (nonatomic, strong) UILabel *navigationBarTitleLabel;
+@property (nonatomic, strong) UILabel *navigationBarSubtitleLabel;
+@property (nonatomic, retain) UIButton *attachButton;
 
 @property (nonatomic) CGFloat previousCollectionViewFrameWidth;
 
-@property (nonatomic) NSUInteger page;
+@property NSUInteger page;
 @property (nonatomic) BOOL composeOnOpen;
 @property (nonatomic) BOOL peek;
 
@@ -215,7 +215,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, readonly) TSNetworkManager *networkManager;
 @property (nonatomic, readonly) OutboundCallInitiator *outboundCallInitiator;
 
-@property (nonatomic) NSCache *messageAdapterCache;
+@property NSCache *messageAdapterCache;
 
 @end
 
@@ -462,9 +462,6 @@ typedef enum : NSUInteger {
 {
     [super viewWillAppear:animated];
 
-    // Since we're using a custom back button, we have to do some extra work to manage the interactivePopGestureRecognizer
-    self.navigationController.interactivePopGestureRecognizer.delegate = self;
-
     // We need to recheck on every appearance, since the user may have left the group in the settings VC,
     // or on another device.
     [self hideInputIfNeeded];
@@ -545,9 +542,6 @@ typedef enum : NSUInteger {
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [self toggleObservers:NO];
-
-    // Since we're using a custom back button, we have to do some extra work to manage the interactivePopGestureRecognizer
-    self.navigationController.interactivePopGestureRecognizer.delegate = nil;
 
     [_unreadContainer removeFromSuperview];
     _unreadContainer = nil;
@@ -773,6 +767,24 @@ typedef enum : NSUInteger {
     OWSAssert(self.inputToolbar.contentView.textView);
     self.inputToolbar.contentView.textView.pasteDelegate = self;
     ((OWSMessagesComposerTextView *) self.inputToolbar.contentView.textView).textViewPasteDelegate = self;
+}
+
+- (nullable UILabel *)findNavbarTitleLabel
+{
+    for (UIView *view in self.navigationController.navigationBar.subviews) {
+        if ([view isKindOfClass:NSClassFromString(@"UINavigationItemView")]) {
+            UIView *navItemView = view;
+            for (UIView *aView in navItemView.subviews) {
+                if ([aView isKindOfClass:[UILabel class]]) {
+                    UILabel *label = (UILabel *)aView;
+                    if ([label.text isEqualToString:self.title]) {
+                        return label;
+                    }
+                }
+            }
+        }
+    }
+    return nil;
 }
 
 // Overiding JSQMVC layout defaults
@@ -1236,17 +1248,20 @@ typedef enum : NSUInteger {
     return !![self collectionView:self.collectionView attributedTextForCellBottomLabelAtIndexPath:indexPath];
 }
 
-- (TSOutgoingMessage *)nextOutgoingMessage:(NSIndexPath *)indexPath
+- (id<OWSMessageData>)nextOutgoingMessage:(NSIndexPath *)indexPath
 {
-    NSInteger rowCount = [self.collectionView numberOfItemsInSection:indexPath.section];
-    for (NSInteger row = indexPath.row + 1; row < rowCount; row++) {
-        id<OWSMessageData> nextMessage = [self messageAtIndexPath:[NSIndexPath indexPathForRow:row
-                                                                                     inSection:indexPath.section]];
-        if ([nextMessage isKindOfClass:[TSOutgoingMessage class]]) {
-            return (TSOutgoingMessage *)nextMessage;
-        }
+    id<OWSMessageData> nextMessage =
+        [self messageAtIndexPath:[NSIndexPath indexPathForRow:indexPath.row + 1 inSection:indexPath.section]];
+    int i = 1;
+
+    while (indexPath.item + i < [self.collectionView numberOfItemsInSection:indexPath.section] - 1
+        && !nextMessage.isOutgoingAndDelivered) {
+        i++;
+        nextMessage =
+            [self messageAtIndexPath:[NSIndexPath indexPathForRow:indexPath.row + i inSection:indexPath.section]];
     }
-    return nil;
+
+    return nextMessage;
 }
 
 - (NSAttributedString *)collectionView:(JSQMessagesCollectionView *)collectionView
@@ -1261,46 +1276,26 @@ typedef enum : NSUInteger {
     if (message.messageType == TSOutgoingMessageAdapter) {
         TSOutgoingMessage *outgoingMessage = (TSOutgoingMessage *)message.interaction;
         if (outgoingMessage.messageState == TSOutgoingMessageStateUnsent) {
-            return [[NSAttributedString alloc] initWithString:NSLocalizedString(@"MESSAGE_STATUS_FAILED",
-                                                                                @"message footer for failed messages")];
-        } else if (outgoingMessage.messageState == TSOutgoingMessageStateSent ||
-                   outgoingMessage.messageState == TSOutgoingMessageStateDelivered) {
-            NSString *text = (outgoingMessage.messageState == TSOutgoingMessageStateSent
-                              ? NSLocalizedString(@"MESSAGE_STATUS_SENT",
-                                                  @"message footer for sent messages")
-                              : NSLocalizedString(@"MESSAGE_STATUS_DELIVERED",
-                                                  @"message footer for delivered messages"));
-            NSAttributedString *result = [[NSAttributedString alloc] initWithString:text];
+            return [[NSAttributedString alloc] initWithString:NSLocalizedString(@"FAILED_SENDING_TEXT", nil)];
+        } else if (message.isOutgoingAndDelivered) {
+            NSAttributedString *deliveredString =
+                [[NSAttributedString alloc] initWithString:NSLocalizedString(@"DELIVERED_MESSAGE_TEXT", @"")];
 
             // Show when it's the last message in the thread
             if (indexPath.item == [self.collectionView numberOfItemsInSection:indexPath.section] - 1) {
                 [self updateLastDeliveredMessage:message];
-                return result;
+                return deliveredString;
             }
 
-            // Or when the next message is *not* an outgoing sent/delivered message.
-            TSOutgoingMessage *nextMessage = [self nextOutgoingMessage:indexPath];
-            if (nextMessage &&
-                nextMessage.messageState != TSOutgoingMessageStateSent &&
-                nextMessage.messageState != TSOutgoingMessageStateDelivered) {
+            // Or when the next message is *not* an outgoing delivered message.
+            TSMessageAdapter *nextMessage = [self nextOutgoingMessage:indexPath];
+            if (!nextMessage.isOutgoingAndDelivered) {
                 [self updateLastDeliveredMessage:message];
-                return result;
+                return deliveredString;
             }
         } else if (message.isMediaBeingSent) {
-            return [[NSAttributedString alloc] initWithString:NSLocalizedString(@"MESSAGE_STATUS_UPLOADING",
-                                                                                @"message footer while attachment is uploading")];
-        } else {
-            OWSAssert(outgoingMessage.messageState == TSOutgoingMessageStateAttemptingOut);
-            // Show an "..." ellisis icon.
-            //
-            // TODO: It'd be nice to animate this, but JSQMessageViewController doesn't give us a great way to do so.
-            //       We already have problems with unstable cell layout; we don't want to exacerbate them.
-            NSAttributedString *result =
-            [[NSAttributedString alloc] initWithString:@"/"
-                                            attributes:@{
-                                                         NSFontAttributeName: [UIFont ows_dripIconsFont:14.f],
-                                                         }];
-            return result;
+            return [[NSAttributedString alloc] initWithString:NSLocalizedString(@"UPLOADING_MESSAGE_TEXT",
+                                                                  @"message footer while attachment is uploading")];
         }
     } else if (message.messageType == TSIncomingMessageAdapter && [self.thread isKindOfClass:[TSGroupThread class]]) {
         TSIncomingMessage *incomingMessage = (TSIncomingMessage *)message.interaction;
@@ -1346,6 +1341,12 @@ typedef enum : NSUInteger {
                                                               instantiateViewControllerWithIdentifier:@"OWSConversationSettingsTableViewController"];
     [settingsVC configureWithThread:self.thread];
     [self.navigationController pushViewController:settingsVC animated:YES];
+}
+
+- (void)didTapTitle
+{
+    DDLogDebug(@"%@ Tapped title in navbar", self.tag);
+    [self showConversationSettings];
 }
 
 - (void)didTapTimerInNavbar:(id)sender
@@ -2159,21 +2160,12 @@ typedef enum : NSUInteger {
                                                                          forNotifications:notifications
                                                                              withMappings:self.messageMappings];
 
+    __block BOOL scrollToBottom = NO;
+
     if ([sectionChanges count] == 0 & [messageRowChanges count] == 0) {
         return;
     }
-    
-    __block BOOL scrollToBottom = NO;
-    const CGFloat kIsAtBottomTolerancePts = 5;
-    BOOL wasAtBottom = (self.collectionView.contentOffset.y +
-                        self.collectionView.bounds.size.height +
-                        kIsAtBottomTolerancePts >=
-                        self.collectionView.contentSize.height);
-    // We want sending messages to feel snappy.  So, if the only
-    // update is a new outgoing message AND we're already scrolled to
-    // the bottom of the conversation, skip the scroll animation.
-    __block BOOL shouldAnimateScrollToBottom = !wasAtBottom;
-    
+
     [self.collectionView performBatchUpdates:^{
       for (YapDatabaseViewRowChange *rowChange in messageRowChanges) {
           switch (rowChange.type) {
@@ -2184,17 +2176,11 @@ typedef enum : NSUInteger {
                   if (collectionKey.key) {
                       [self.messageAdapterCache removeObjectForKey:collectionKey.key];
                   }
-                  
                   break;
               }
               case YapDatabaseViewChangeInsert: {
                   [self.collectionView insertItemsAtIndexPaths:@[ rowChange.newIndexPath ]];
                   scrollToBottom = YES;
-                  
-                  TSInteraction *interaction = [self interactionAtIndexPath:rowChange.newIndexPath];
-                  if (![interaction isKindOfClass:[TSOutgoingMessage class]]) {
-                      shouldAnimateScrollToBottom = YES;
-                  }
                   break;
               }
               case YapDatabaseViewChangeMove: {
@@ -2220,7 +2206,7 @@ typedef enum : NSUInteger {
               [self.collectionView reloadData];
           }
           if (scrollToBottom) {
-              [self scrollToBottomAnimated:shouldAnimateScrollToBottom];
+              [self scrollToBottomAnimated:YES];
           }
         }];
 }

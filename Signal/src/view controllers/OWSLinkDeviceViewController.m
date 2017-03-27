@@ -6,6 +6,7 @@
 #import "OWSDeviceProvisioningURLParser.h"
 #import "OWSLinkedDevicesTableViewController.h"
 #import "SettingsTableViewController.h"
+#import "UIViewController+OWS.h"
 #import <SignalServiceKit/ECKeyPair+OWSPrivateKey.h>
 #import <SignalServiceKit/OWSDeviceProvisioner.h>
 #import <SignalServiceKit/TSStorageManager+IdentityKeyStore.h>
@@ -26,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+
+    [self useOWSBackButton];
 
     // HACK to get full width preview layer
     CGRect oldFrame = self.qrScanningView.frame;

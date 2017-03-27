@@ -14,8 +14,8 @@ class InviteFlow: NSObject, MFMessageComposeViewControllerDelegate, MFMailCompos
 
     let TAG = "[ShareActions]"
 
-    let installUrl = "https://signal.org/install/"
-    let homepageUrl = "https://whispersystems.org"
+    let installUrl = RestAPI.installUrl
+    let homepageUrl = RestAPI.homepageUrl
 
     let actionSheetController: UIAlertController
     let presentingViewController: UIViewController

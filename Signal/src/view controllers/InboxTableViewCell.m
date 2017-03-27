@@ -63,8 +63,12 @@ NS_ASSUME_NONNULL_BEGIN
     }
     UIImage *avatar = [OWSAvatarBuilder buildImageForThread:thread contactsManager:contactsManager];
     self.threadId = thread.uniqueId;
-    NSString *snippetLabel = [[DisplayableTextFilter new] displayableText:thread.lastMessageLabel];
-
+    NSString *snippetLabel;
+    if ([[DisplayableTextFilter new] shouldPreventDisplayOfText:thread.lastMessageLabel]) {
+        snippetLabel = NSLocalizedString(@"INFO_MESSAGE_UNABLE_TO_DISPLAY_MESSAGE", @"Generic error text when message contents are undisplayable");
+    } else {
+        snippetLabel = thread.lastMessageLabel;
+    }
     NSAttributedString *attributedDate = [self dateAttributedString:thread.lastMessageDate];
     NSUInteger unreadCount             = [[TSMessagesManager sharedManager] unreadMessagesInThread:thread];
 

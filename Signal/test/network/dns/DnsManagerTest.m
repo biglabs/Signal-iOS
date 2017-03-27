@@ -1,8 +1,7 @@
 #import <XCTest/XCTest.h>
 #import "DnsManager.h"
 #import "TestUtil.h"
-
-#define infrastructureTestHostName @"relay.whispersystems.org"
+#import "RestAPI.h"
 #define reliableHostName @"example.com"
 #define invalidHostname @"∆©˙∆¨¥©©˜¨¥©˜†¥µ¬¬¨˙µ†¥∫®∂®†"
 #define nonExistentHostname [NSString stringWithFormat:@"%@kfurmtludehntlgihmvnduyebntiinvbudydepqowudyfnrkt.com", \

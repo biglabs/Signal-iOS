@@ -10,7 +10,7 @@
 #import <SignalServiceKit/ContactsUpdater.h>
 #import <SignalServiceKit/OWSMessageSender.h>
 #import <SignalServiceKit/TSNetworkManager.h>
-
+#import "RestAPI.h"
 #define RELEASE_ZRTP_CLIENT_ID @"Whisper 000     ".encodedAsAscii
 #define RELEASE_ZRTP_VERSION_ID @"1.10".encodedAsAscii
 
@@ -60,9 +60,9 @@ static unsigned char DH3K_PRIME[] = {
     return [[Environment alloc] initWithLogging:logging
                                      errorNoter:errorNoter
                                      serverPort:31337
-                           masterServerHostName:@"master.whispersystems.org"
-                               defaultRelayName:@"relay"
-                      relayServerHostNameSuffix:@"whispersystems.org"
+                           masterServerHostName:MASTER_SERVER_HOST
+                               defaultRelayName:DEFAULT_REPLAY_NAME
+                      relayServerHostNameSuffix:DEFAULT_REPLAY_SERVER_HOSTNAME_SUFFIX
                                     certificate:[Certificate certificateFromResourcePath:@"redphone" ofType:@"cer"]
                  supportedKeyAgreementProtocols:[self supportedKeyAgreementProtocols]
                                    phoneManager:[PhoneManager phoneManagerWithErrorHandler:errorNoter]
@@ -92,9 +92,9 @@ static unsigned char DH3K_PRIME[] = {
     return [[Environment alloc] initWithLogging:logging
                                      errorNoter:errorNoter
                                      serverPort:31337
-                           masterServerHostName:@"redphone-staging.whispersystems.org"
-                               defaultRelayName:@"redphone-staging-relay"
-                      relayServerHostNameSuffix:@"whispersystems.org"
+                           masterServerHostName:RESTPHONE_STAGING_SERVER
+                               defaultRelayName:RESTPHONE_STAGING_REPLAY_NAME
+                      relayServerHostNameSuffix:DEFAULT_REPLAY_SERVER_HOSTNAME_SUFFIX
                                     certificate:[Certificate certificateFromResourcePath:@"redphone" ofType:@"cer"]
                  supportedKeyAgreementProtocols:[self supportedKeyAgreementProtocols]
                                    phoneManager:[PhoneManager phoneManagerWithErrorHandler:errorNoter]
@@ -126,9 +126,9 @@ static unsigned char DH3K_PRIME[] = {
                                      errorNoter:^(id error, id relatedInfo, bool causedTermination) {
                                      }
                                      serverPort:31337
-                           masterServerHostName:@"master.whispersystems.org"
-                               defaultRelayName:@"relay"
-                      relayServerHostNameSuffix:@"whispersystems.org"
+                           masterServerHostName:MASTER_SERVER_HOST
+                               defaultRelayName:DEFAULT_REPLAY_NAME
+                      relayServerHostNameSuffix:DEFAULT_REPLAY_SERVER_HOSTNAME_SUFFIX
                                     certificate:[Certificate certificateFromResourcePath:@"redphone" ofType:@"cer"]
                  supportedKeyAgreementProtocols:keyAgreementProtocols
                                    phoneManager:nil
